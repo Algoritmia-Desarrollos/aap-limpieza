@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard - CVO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-[#f6f7f8] text-gray-800">
+
+    <div class="flex min-h-screen">
+        
+        <div id="sidebar-container"></div>
+
+        <main class="flex-1 md:ml-64 p-8">
+            
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 id="welcomeMsg" class="text-2xl font-bold text-gray-900">Bienvenido...</h1>
+                    <p id="dateDisplay" class="text-gray-500 text-sm mt-1">...</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">refresh</span> Actualizar
+                    </button>
+                    <button class="bg-[#256af4] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition">
+                        + Nueva Tarea
+                    </button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Operarios Activos</p>
+                            <h3 id="statOperarios" class="text-3xl font-bold mt-2 text-gray-900">-</h3>
+                        </div>
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                            <span class="material-symbols-outlined">group</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Tareas Hoy</p>
+                            <h3 id="statTareas" class="text-3xl font-bold mt-2 text-gray-900">-</h3>
+                        </div>
+                        <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                            <span class="material-symbols-outlined">assignment_turned_in</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between h-32">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-500 text-sm font-medium">Alertas / Retrasos</p>
+                            <h3 id="statAlertas" class="text-3xl font-bold mt-2 text-red-500">-</h3>
+                        </div>
+                        <div class="p-2 bg-red-50 text-red-500 rounded-lg">
+                            <span class="material-symbols-outlined">warning</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800">Actividad Reciente en Planta</h3>
+                    <a href="#" class="text-sm text-blue-600 font-medium hover:underline">Ver todo</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-500 uppercase font-medium">
+                            <tr>
+                                <th class="px-6 py-4">Operario</th>
+                                <th class="px-6 py-4">Sector / Tarea</th>
+                                <th class="px-6 py-4">Hora Inicio</th>
+                                <th class="px-6 py-4">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivityTable">
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-gray-400">Cargando datos...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

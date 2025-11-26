@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>CVO Clean - Login</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#256af4",
+                        "background-light": "#f5f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { min-height: max(884px, 100dvh); }
+        /* Animación de carga para el botón */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #ffffff;
+            width: 20px;
+            height: 20px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden">
+    <div class="flex flex-col grow justify-between p-4">
+        
+        <div class="flex flex-col items-center pt-16">
+            <div class="flex h-24 w-24 items-center justify-center rounded-xl bg-background-light dark:bg-[#192133] shadow-lg">
+                <span class="text-xl font-bold text-slate-800 dark:text-white">Algoritmia</span>
+            </div>
+            <h2 class="text-white mt-6 text-lg font-medium">Ingreso de Personal</h2>
+        </div>
+
+        <div class="flex flex-col gap-6 w-full max-w-sm mx-auto">
+            
+            <div class="flex px-4 py-3">
+                <div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-background-light dark:bg-[#222f49] p-1">
+                    <label class="flex cursor-pointer h-full grow items-center justify-center rounded-lg px-2 bg-background-dark shadow text-white text-sm font-medium">
+                        <span class="truncate">Ingresar PIN</span>
+                        <input checked="" class="invisible w-0" name="login_method" type="radio" value="pin"/>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-center px-4">
+                <fieldset class="relative flex gap-3 sm:gap-4">
+                    <input id="pin-1" class="pin-input flex h-14 w-12 text-center text-2xl font-bold rounded-lg border-2 border-[#314368] bg-[#192133] text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" type="tel" maxlength="1" placeholder="•"/>
+                    <input id="pin-2" class="pin-input flex h-14 w-12 text-center text-2xl font-bold rounded-lg border-2 border-[#314368] bg-[#192133] text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" type="tel" maxlength="1" placeholder="•"/>
+                    <input id="pin-3" class="pin-input flex h-14 w-12 text-center text-2xl font-bold rounded-lg border-2 border-[#314368] bg-[#192133] text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" type="tel" maxlength="1" placeholder="•"/>
+                    <input id="pin-4" class="pin-input flex h-14 w-12 text-center text-2xl font-bold rounded-lg border-2 border-[#314368] bg-[#192133] text-white focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all" type="tel" maxlength="1" placeholder="•"/>
+                </fieldset>
+            </div>
+
+            <div id="errorMsg" class="hidden text-red-500 text-sm font-medium text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
+                PIN Incorrecto
+            </div>
+
+            <div class="flex px-4">
+                <button id="loginBtn" class="flex w-full cursor-pointer items-center justify-center rounded-lg h-12 bg-primary text-white text-base font-bold shadow-[0_0_15px_rgba(37,106,244,0.5)] hover:bg-primary/90 active:scale-95 transition-all">
+                    INGRESAR
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center pb-4">
+            <p class="text-[#90a4cb] text-sm text-center">Version 1.0.0<br>Powered by Algoritmia</p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="js/login.js"></script>
+</body>
+</html>
