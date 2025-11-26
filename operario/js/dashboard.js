@@ -2,82 +2,233 @@ import { supabase } from '../../assets/js/supabaseClient.js';
 import { checkSession, logout, getFormattedDate } from '../../assets/js/utils.js';
 import { renderBottomNav } from '../components/bottomNav.js';
 
-// 1. Seguridad y UI Base
+// --- CONFIGURACIÓN INICIAL ---
 const user = checkSession('operario');
 renderBottomNav('dashboard');
 
-// 2. Renderizar Header
-document.getElementById('dateDisplay').innerText = getFormattedDate();
-document.getElementById('welcomeMsg').innerText = `Hola, ${user.nombre}`;
+// Referencias DOM
+const scanBtn = document.getElementById('scanBtn');
+const scannerModal = document.getElementById('scannerModal');
+const closeScannerBtn = document.getElementById('closeScannerBtn');
+const scanState = document.getElementById('scanState');
+const activeTaskState = document.getElementById('activeTaskState');
+const finishTaskBtn = document.getElementById('finishTaskBtn');
+const timerDisplay = document.getElementById('taskTimer');
 
-// 3. Listeners
-document.getElementById('logoutBtn').addEventListener('click', logout);
-document.getElementById('scanBtn').addEventListener('click', () => {
-    alert("Próximamente: Abrir Cámara para escanear QR");
-});
+let html5QrcodeScanner = null;
+let activeInterval = null;
 
-// 4. Cargar Rutinas desde Supabase
-async function loadDailyTasks() {
-    const taskList = document.getElementById('taskList');
-    
-    // Calcular día de la semana (1 = Lunes en tu DB según vimos)
-    let today = new Date().getDay(); 
-    if (today === 0) today = 7; // Convertir domingo 0 a 7
+// --- INICIO ---
+init();
 
-    try {
-        console.log(`Buscando rutinas para Operario ${user.id} en día ${today}`);
+async function init() {
+    // UI Header
+    document.getElementById('dateDisplay').innerText = getFormattedDate();
+    document.getElementById('welcomeMsg').innerText = `Hola, ${user.nombre.split(' ')[0]}`;
+    document.getElementById('logoutBtn').addEventListener('click', logout);
 
-        const { data: rutinas, error } = await supabase
-            .from('limp_rutinas')
-            .select(`
-                *,
-                limp_lugares ( nombre )
-            `)
-            .eq('operario_default_id', user.id)
-            .contains('dias_semana', [today]); // Filtra si el array incluye hoy
+    // Cargar Datos
+    await checkActiveTask(); // ¿Ya estaba trabajando?
+    await loadDailyTasks();  // Cargar lista de pendientes
+}
 
-        if (error) throw error;
+// --- 1. GESTIÓN DE TAREA ACTIVA ---
 
-        // Renderizar
-        taskList.innerHTML = '';
-        
-        if (rutinas.length === 0) {
-            taskList.innerHTML = `
-                <div class="flex flex-col items-center justify-center py-8 opacity-50">
-                    <span class="material-symbols-outlined text-4xl mb-2">bedtime</span>
-                    <p>No tienes rutinas asignadas hoy.</p>
-                </div>`;
-            return;
-        }
+async function checkActiveTask() {
+    // Buscamos si hay un registro SIN fecha de fin para este usuario
+    const { data, error } = await supabase
+        .from('limp_registros')
+        .select('*, limp_lugares(nombre)')
+        .eq('operario_id', user.id)
+        .is('fin_tarea', null) // Tarea abierta
+        .single();
 
-        rutinas.forEach(rutina => {
-            const card = document.createElement('div');
-            card.className = "bg-[#182234] p-4 rounded-xl border border-white/5 flex justify-between items-center shadow-sm";
-            card.innerHTML = `
-                <div>
-                    <h4 class="font-bold text-white text-lg">${rutina.limp_lugares.nombre}</h4>
-                    <p class="text-gray-400 text-sm">${rutina.titulo}</p>
-                    <div class="mt-2 flex items-center gap-2">
-                        <span class="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
-                            ${rutina.hora_inicio_sugerida.slice(0,5)} hs
-                        </span>
-                        <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
-                            ${rutina.duracion_estimada_minutos} min
-                        </span>
-                    </div>
-                </div>
-                <div class="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-gray-400">chevron_right</span>
-                </div>
-            `;
-            taskList.appendChild(card);
-        });
-
-    } catch (err) {
-        console.error(err);
-        taskList.innerHTML = `<p class="text-red-400 text-center">Error cargando rutinas</p>`;
+    if (data) {
+        // Hay tarea activa -> Mostrar UI de "Trabajando"
+        showActiveState(data);
+    } else {
+        // No hay tarea -> Mostrar botón Escanear
+        showIdleState();
     }
 }
 
-// Iniciar carga
-loadDailyTasks();
+function showActiveState(taskData) {
+    scanState.classList.add('hidden');
+    activeTaskState.classList.remove('hidden');
+    
+    document.getElementById('currentLocationName').innerText = taskData.limp_lugares.nombre;
+    
+    // Iniciar contador visual
+    startTimer(new Date(taskData.inicio_tarea));
+
+    // Configurar botón finalizar
+    finishTaskBtn.onclick = () => finishTask(taskData.id);
+}
+
+function showIdleState() {
+    scanState.classList.remove('hidden');
+    activeTaskState.classList.add('hidden');
+    stopTimer();
+}
+
+// --- 2. SISTEMA DE ESCANEO ---
+
+scanBtn.addEventListener('click', () => {
+    scannerModal.classList.remove('hidden');
+    startScanner();
+});
+
+closeScannerBtn.addEventListener('click', stopScanner);
+
+function startScanner() {
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" }, // Usa cámara trasera
+        config,
+        onScanSuccess,
+        (errorMessage) => { /* Ignorar errores de lectura en vacío */ }
+    ).catch(err => {
+        alert("Error al iniciar cámara: " + err);
+    });
+}
+
+function stopScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+            html5QrcodeScanner.clear();
+            scannerModal.classList.add('hidden');
+        }).catch(err => console.error(err));
+    } else {
+        scannerModal.classList.add('hidden');
+    }
+}
+
+async function onScanSuccess(decodedText, decodedResult) {
+    // 1. Detener escáner
+    stopScanner();
+    console.log(`Código escaneado: ${decodedText}`);
+
+    // 2. Buscar qué lugar es en la Base de Datos
+    // Suponemos que el QR tiene el texto que guardamos en la columna 'codigo_qr' (ej: QR-NAVE-INT)
+    try {
+        const { data: lugar, error } = await supabase
+            .from('limp_lugares')
+            .select('id, nombre')
+            .eq('codigo_qr', decodedText)
+            .single();
+
+        if (error || !lugar) {
+            alert("❌ Código QR no reconocido en el sistema.");
+            return;
+        }
+
+        // 3. Crear Registro de Inicio (START)
+        const { data: newRecord, error: insertError } = await supabase
+            .from('limp_registros')
+            .insert([
+                { 
+                    operario_id: user.id,
+                    lugar_id: lugar.id,
+                    inicio_tarea: new Date().toISOString(),
+                    estado: 'en_progreso'
+                }
+            ])
+            .select('*, limp_lugares(nombre)')
+            .single();
+
+        if (insertError) throw insertError;
+
+        // 4. Cambiar UI
+        alert(`✅ Inicio registrado en: ${lugar.nombre}`);
+        showActiveState(newRecord);
+
+    } catch (err) {
+        console.error(err);
+        alert("Error al procesar el escaneo.");
+    }
+}
+
+// --- 3. FINALIZAR TAREA ---
+
+async function finishTask(registroId) {
+    if (!confirm("¿Confirmar que terminaste la tarea?")) return;
+
+    try {
+        // Calcular duración (opcional, también se puede hacer con SQL triggers)
+        // Por ahora solo cerramos la fecha
+        const { error } = await supabase
+            .from('limp_registros')
+            .update({ 
+                fin_tarea: new Date().toISOString(),
+                estado: 'completado'
+            })
+            .eq('id', registroId);
+
+        if (error) throw error;
+
+        // Volver a estado normal
+        showIdleState();
+        loadDailyTasks(); // Recargar lista para ver si se actualiza algo
+
+    } catch (err) {
+        console.error(err);
+        alert("Error al finalizar tarea.");
+    }
+}
+
+// --- 4. UTILIDADES (Timer y Lista) ---
+
+function startTimer(startTime) {
+    stopTimer(); // Limpiar anterior si existe
+    activeInterval = setInterval(() => {
+        const now = new Date();
+        const diff = now - startTime;
+        
+        // Formato HH:MM:SS
+        const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        
+        timerDisplay.innerText = `${hours}:${minutes}:${seconds}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (activeInterval) clearInterval(activeInterval);
+    timerDisplay.innerText = "00:00:00";
+}
+
+async function loadDailyTasks() {
+    const taskList = document.getElementById('taskList');
+    let today = new Date().getDay(); 
+    if (today === 0) today = 7;
+
+    const { data: rutinas } = await supabase
+        .from('limp_rutinas')
+        .select('*, limp_lugares(nombre)')
+        .eq('operario_default_id', user.id)
+        .contains('dias_semana', [today]);
+
+    taskList.innerHTML = '';
+    
+    if (!rutinas || rutinas.length === 0) {
+        taskList.innerHTML = `<div class="text-center py-8 text-gray-500"><p>No hay rutinas asignadas hoy.</p></div>`;
+        return;
+    }
+
+    rutinas.forEach(rutina => {
+        const div = document.createElement('div');
+        div.className = "bg-[#182234] p-4 rounded-xl border border-white/5 flex justify-between items-center shadow-sm";
+        div.innerHTML = `
+            <div>
+                <h4 class="font-bold text-white">${rutina.limp_lugares.nombre}</h4>
+                <p class="text-gray-400 text-sm">${rutina.titulo}</p>
+                <span class="text-xs bg-primary/20 text-primary px-2 py-1 rounded mt-1 inline-block">${rutina.hora_inicio_sugerida.slice(0,5)} hs</span>
+            </div>
+        `;
+        taskList.appendChild(div);
+    });
+}

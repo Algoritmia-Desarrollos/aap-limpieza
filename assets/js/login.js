@@ -1,11 +1,11 @@
-// js/login.js
+// assets/js/login.js
 import { supabase } from './supabaseClient.js'
 
 const inputs = document.querySelectorAll('.pin-input');
 const loginBtn = document.getElementById('loginBtn');
 const errorMsg = document.getElementById('errorMsg');
 
-// --- 1. Control de Inputs (UX) ---
+// --- 1. Control de Inputs (UX: Salto automático) ---
 inputs.forEach((input, index) => {
     // Al escribir un número, pasar al siguiente
     input.addEventListener('input', (e) => {
@@ -31,7 +31,7 @@ inputs.forEach((input, index) => {
 
 // --- 2. Lógica de Login ---
 async function iniciarSesion() {
-    // 1. Obtener el PIN completo
+    // 1. Obtener el PIN completo concatenando los inputs
     let pin = '';
     inputs.forEach(input => pin += input.value);
 
@@ -41,8 +41,9 @@ async function iniciarSesion() {
         return;
     }
 
-    // 3. UI de carga
-    loginBtn.innerHTML = '<div class="loader"></div>'; // Spinner
+    // 3. UI de carga (Spinner)
+    const btnTextoOriginal = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<div class="loader"></div>'; 
     loginBtn.disabled = true;
     errorMsg.classList.add('hidden');
 
@@ -60,7 +61,7 @@ async function iniciarSesion() {
         if (error || !data) {
             console.warn("Login fallido:", error);
             mostrarError("PIN incorrecto o usuario inactivo");
-            resetButton();
+            resetButton(btnTextoOriginal);
             return;
         }
 
@@ -70,19 +71,19 @@ async function iniciarSesion() {
         // Guardar sesión en el navegador
         localStorage.setItem('cvo_usuario', JSON.stringify(data));
 
-        // Redirigir según rol
+        // --- REDIRECCIÓN CORREGIDA (Rutas con carpetas) ---
         setTimeout(() => {
             if (data.rol === 'admin') {
-                window.location.href = 'admin_dashboard.html'; // Asegúrate de crear este archivo luego
+                window.location.href = 'admin/dashboard.html'; 
             } else {
-                window.location.href = 'operario_dashboard.html'; // Asegúrate de crear este archivo luego
+                window.location.href = 'operario/dashboard.html'; 
             }
         }, 500);
 
     } catch (err) {
         console.error("Error de red:", err);
         mostrarError("Error de conexión");
-        resetButton();
+        resetButton(btnTextoOriginal);
     }
 }
 
@@ -90,14 +91,14 @@ async function iniciarSesion() {
 function mostrarError(texto) {
     errorMsg.innerText = texto;
     errorMsg.classList.remove('hidden');
-    // Vibración en móviles
+    // Vibración en móviles para feedback táctil
     if(navigator.vibrate) navigator.vibrate(200);
 }
 
-function resetButton() {
-    loginBtn.innerHTML = 'INGRESAR';
+function resetButton(textoOriginal = 'INGRESAR') {
+    loginBtn.innerHTML = textoOriginal;
     loginBtn.disabled = false;
-    // Limpiar inputs
+    // Limpiar inputs y enfocar el primero
     inputs.forEach(i => i.value = '');
     inputs[0].focus();
 }

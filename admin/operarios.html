@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Operarios - CVO Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-[#f6f7f8] text-gray-800">
+
+    <div class="flex min-h-screen">
+        
+        <div id="sidebar-container"></div>
+
+        <main class="flex-1 md:ml-64 p-8">
+            
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900">Personal de Limpieza</h1>
+                    <p class="text-gray-500 mt-1">Gestiona los accesos y perfiles de los operarios.</p>
+                </div>
+                <button id="openModalBtn" class="bg-[#256af4] text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition flex items-center gap-2">
+                    <span class="material-symbols-outlined">person_add</span>
+                    Nuevo Operario
+                </button>
+            </header>
+
+            <div class="bg-white p-4 rounded-2xl border border-gray-200 mb-6 flex flex-wrap gap-4 items-center justify-between shadow-sm">
+                <div class="relative w-full md:w-96">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                    <input type="text" id="searchInput" placeholder="Buscar por nombre..." class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
+                </div>
+                <div class="flex gap-2">
+                    <select id="statusFilter" class="bg-gray-50 border border-gray-200 text-gray-700 py-2 px-4 rounded-lg focus:outline-none">
+                        <option value="all">Todos</option>
+                        <option value="active" selected>Activos</option>
+                        <option value="inactive">Inactivos</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-gray-500 uppercase font-bold text-xs">
+                            <tr>
+                                <th class="px-6 py-4">Nombre</th>
+                                <th class="px-6 py-4">Rol</th>
+                                <th class="px-6 py-4">PIN de Acceso</th>
+                                <th class="px-6 py-4 text-center">Estado</th>
+                                <th class="px-6 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="operariosTableBody" class="text-sm text-gray-600 divide-y divide-gray-100">
+                            <tr><td colspan="5" class="px-6 py-8 text-center">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="operarioModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-800">Nuevo Operario</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <form id="operarioForm" class="p-6 flex flex-col gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                    <input type="text" id="nombreInput" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                        <select id="rolInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none">
+                            <option value="operario">Operario</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">PIN (4 dígitos)</label>
+                        <input type="text" id="pinInput" maxlength="4" pattern="\d{4}" required placeholder="Ej: 1234" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition font-mono tracking-widest text-center">
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" id="cancelBtn" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Cancelar</button>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/operarios.js"></script>
+</body>
+</html>
