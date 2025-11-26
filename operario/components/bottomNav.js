@@ -9,7 +9,7 @@ export function renderBottomNav(activePage) {
             <span class="material-symbols-outlined">history</span>
             <span class="text-xs font-medium">Historial</span>
         </a>
-        <a href="#" class="flex flex-col items-center gap-1 ${activePage === 'perfil' ? 'text-[#256af4]' : 'text-[#90a4cb] hover:text-white'} transition-colors">
+        <a href="perfil.html" class="flex flex-col items-center gap-1 ${activePage === 'perfil' ? 'text-[#256af4]' : 'text-[#90a4cb] hover:text-white'} transition-colors">
             <span class="material-symbols-outlined">person</span>
             <span class="text-xs font-medium">Perfil</span>
         </a>

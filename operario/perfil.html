@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Perfil - Operario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <script>
+        tailwind.config = { darkMode: "class", theme: { extend: { colors: { "primary": "#256af4", "bg-dark": "#101622" } } } }
+    </script>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-bg-dark text-white pb-24">
+
+    <div class="p-4 pt-6 sticky top-0 bg-bg-dark z-10 border-b border-white/5">
+        <h1 class="text-2xl font-bold">Mi Perfil</h1>
+    </div>
+
+    <main class="px-4 mt-8">
+        
+        <div class="flex flex-col items-center mb-8">
+            <div class="w-24 h-24 bg-primary rounded-full flex items-center justify-center text-4xl font-bold mb-4 shadow-lg shadow-blue-500/30">
+                <span id="userInitials">...</span>
+            </div>
+            <h2 id="userName" class="text-xl font-bold">Cargando...</h2>
+            <p id="userRole" class="text-gray-400 text-sm">Operario</p>
+        </div>
+
+        <div class="bg-[#182234] rounded-2xl overflow-hidden border border-white/5 mb-6">
+            <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-gray-400">badge</span>
+                    <span class="text-sm font-medium">PIN de Acceso</span>
+                </div>
+                <span id="userPin" class="font-mono font-bold text-gray-300">****</span>
+            </div>
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-gray-400">mail</span>
+                    <span class="text-sm font-medium">Email</span>
+                </div>
+                <span id="userEmail" class="text-sm text-gray-300">...</span>
+            </div>
+        </div>
+
+        <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">logout</span>
+            Cerrar Sesión
+        </button>
+
+    </main>
+
+    <div id="nav-container"></div>
+
+    <script type="module" src="js/perfil.js"></script>
+</body>
+</html>

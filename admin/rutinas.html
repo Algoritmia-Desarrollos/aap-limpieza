@@ -10,7 +10,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        /* Estilo para checkboxes de días */
         .day-checkbox:checked + div {
             background-color: #256af4;
             color: white;
@@ -24,42 +23,13 @@
         
         <div id="sidebar-container"></div>
 
-        <main class="flex-1 md:ml-64 p-8">
+        <main class="flex-1 md:ml-64 p-4 md:p-8 pt-6 md:pt-8">
             
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <header class="flex flex-col gap-4 mb-6">
                 <div>
-                    <h1 class="text-3xl font-black text-gray-900">Rutinas de Limpieza</h1>
-                    <p class="text-gray-500 mt-1">Configura horarios, frecuencias y asignaciones.</p>
+                    <h1 class="text-xl md:text-3xl font-black text-gray-900">Rutinas de Limpieza</h1>
+                    <p class="text-gray-500 mt-1 text-sm">Configura horarios, frecuencias y asignaciones.</p>
                 </div>
-                <button id="openModalBtn" class="bg-[#256af4] text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition flex items-center gap-2">
-                    <span class="material-symbols-outlined">add_task</span>
-                    Nueva Rutina
-                </button>
-            </header>
-
-            <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-500 uppercase font-bold text-xs">
-                            <tr>
-                                <th class="px-6 py-4">Tarea / Sector</th>
-                                <th class="px-6 py-4">Asignado A</th>
-                                <th class="px-6 py-4">Días</th>
-                                <th class="px-6 py-4">Horario</th>
-                                <th class="px-6 py-4 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rutinasTableBody" class="text-sm text-gray-600 divide-y divide-gray-100">
-                            <tr><td colspan="5" class="px-6 py-8 text-center">Cargando datos...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <div id="rutinaModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all scale-100 max-h-[90vh] overflow-y-auto">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 class="font-bold text-lg text-gray-800">Configurar Rutina</h3>
                 <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">

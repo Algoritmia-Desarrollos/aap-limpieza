@@ -4,7 +4,7 @@ export function checkSession(requiredRole) {
     
     // 1. Si no hay usuario, volver al login (root)
     if (!userStr) {
-        window.location.href = '/index.html'; 
+        window.location.href = '../index.html'; 
         return null;
     }
 
@@ -12,8 +12,8 @@ export function checkSession(requiredRole) {
 
     // 2. Si el rol no coincide (Ej: operario queriendo entrar a admin)
     if (requiredRole && user.rol !== requiredRole) {
-        if (user.rol === 'admin') window.location.href = '/admin/dashboard.html';
-        else window.location.href = '/operario/dashboard.html';
+        if (user.rol === 'admin') window.location.href = '../admin/dashboard.html';
+        else window.location.href = '../operario/dashboard.html';
         return null;
     }
 
@@ -23,7 +23,7 @@ export function checkSession(requiredRole) {
 // Cerrar sesión
 export function logout() {
     localStorage.removeItem('cvo_usuario');
-    window.location.href = '/index.html';
+    window.location.href = '../index.html';
 }
 
 // Fecha bonita: "Lunes 27 de Octubre"

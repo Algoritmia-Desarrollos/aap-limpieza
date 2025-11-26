@@ -1,5 +1,6 @@
 // assets/js/login.js
 import { supabase } from './supabaseClient.js'
+import { toast } from './toast.js'
 
 const inputs = document.querySelectorAll('.pin-input');
 const loginBtn = document.getElementById('loginBtn');
@@ -37,7 +38,7 @@ async function iniciarSesion() {
 
     // 2. Validar longitud
     if (pin.length !== 4) {
-        mostrarError("Ingresa los 4 dígitos");
+        toast.warning("Ingresa los 4 dígitos del PIN");
         return;
     }
 
@@ -60,7 +61,7 @@ async function iniciarSesion() {
 
         if (error || !data) {
             console.warn("Login fallido:", error);
-            mostrarError("PIN incorrecto o usuario inactivo");
+            toast.error("PIN incorrecto o usuario inactivo");
             resetButton(btnTextoOriginal);
             return;
         }
@@ -71,6 +72,9 @@ async function iniciarSesion() {
         // Guardar sesión en el navegador
         localStorage.setItem('cvo_usuario', JSON.stringify(data));
 
+        // Mostrar éxito
+        toast.success(`¡Bienvenido, ${data.nombre}!`);
+
         // --- REDIRECCIÓN CORREGIDA (Rutas con carpetas) ---
         setTimeout(() => {
             if (data.rol === 'admin') {
@@ -78,11 +82,11 @@ async function iniciarSesion() {
             } else {
                 window.location.href = 'operario/dashboard.html'; 
             }
-        }, 500);
+        }, 800);
 
     } catch (err) {
         console.error("Error de red:", err);
-        mostrarError("Error de conexión");
+        toast.error("Error de conexión. Verifica tu internet.");
         resetButton(btnTextoOriginal);
     }
 }

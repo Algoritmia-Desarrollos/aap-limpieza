@@ -232,3 +232,8 @@ async function loadDailyTasks() {
         taskList.appendChild(div);
     });
 }
+
+// Limpiar timer al salir de la página para evitar memory leaks
+window.addEventListener('beforeunload', () => {
+    stopTimer();
+});
