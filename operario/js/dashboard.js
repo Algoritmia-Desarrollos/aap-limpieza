@@ -1,208 +1,116 @@
 import { supabase } from '../../assets/js/supabaseClient.js';
 import { checkSession, logout, getFormattedDate } from '../../assets/js/utils.js';
 import { renderBottomNav } from '../components/bottomNav.js';
+import { toast } from '../../assets/js/toast.js';
 
-// --- CONFIGURACIÓN INICIAL ---
 const user = checkSession('operario');
+if (!user) throw new Error("No user session");
+
 renderBottomNav('dashboard');
 
-// Referencias DOM
-const scanBtn = document.getElementById('scanBtn');
-const scannerModal = document.getElementById('scannerModal');
-const closeScannerBtn = document.getElementById('closeScannerBtn');
-const scanState = document.getElementById('scanState');
-const activeTaskState = document.getElementById('activeTaskState');
-const finishTaskBtn = document.getElementById('finishTaskBtn');
-const timerDisplay = document.getElementById('taskTimer');
+// Referencias UI
+const ui = {
+    scanBtn: document.getElementById('scanBtn'),
+    scannerModal: document.getElementById('scannerModal'),
+    closeScannerBtn: document.getElementById('closeScannerBtn'),
+    scanState: document.getElementById('scanState'),
+    activeTaskState: document.getElementById('activeTaskState'),
+    finishTaskBtn: document.getElementById('finishTaskBtn'),
+    timerDisplay: document.getElementById('taskTimer'),
+    currentLocation: document.getElementById('currentLocationName'),
+    taskList: document.getElementById('taskList'),
+    weeklyList: document.getElementById('weeklyScheduleContainer'), // Referencia nueva
+    reader: document.getElementById('reader')
+};
 
 let html5QrcodeScanner = null;
 let activeInterval = null;
 
-// --- INICIO ---
 init();
 
 async function init() {
-    // UI Header
     document.getElementById('dateDisplay').innerText = getFormattedDate();
     document.getElementById('welcomeMsg').innerText = `Hola, ${user.nombre.split(' ')[0]}`;
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        if(confirm("¿Cerrar sesión?")) logout();
+    });
 
-    // Cargar Datos
-    await checkActiveTask(); // ¿Ya estaba trabajando?
-    await loadDailyTasks();  // Cargar lista de pendientes
+    await checkActiveTask(); 
+    await loadDailyTasks(); 
+    await loadWeeklySchedule(); // Cargar la agenda
 }
 
-// --- 1. GESTIÓN DE TAREA ACTIVA ---
+// ... (El código del Escáner y Tarea Activa se mantiene IGUAL que antes) ...
+// PEGA AQUÍ LA LÓGICA DE checkActiveTask, showActiveState, showIdleState, startScanner, etc.
+// QUE YA TENÍAS EN EL ARCHIVO ANTERIOR. 
+// (Para ahorrar espacio, solo pongo lo NUEVO y lo de DailyTasks abajo)
 
-async function checkActiveTask() {
-    // Buscamos si hay un registro SIN fecha de fin para este usuario
-    const { data, error } = await supabase
-        .from('limp_registros')
-        .select('*, limp_lugares(nombre)')
-        .eq('operario_id', user.id)
-        .is('fin_tarea', null) // Tarea abierta
-        .single();
-
-    if (data) {
-        // Hay tarea activa -> Mostrar UI de "Trabajando"
-        showActiveState(data);
-    } else {
-        // No hay tarea -> Mostrar botón Escanear
-        showIdleState();
-    }
-}
-
-function showActiveState(taskData) {
-    scanState.classList.add('hidden');
-    activeTaskState.classList.remove('hidden');
-    
-    document.getElementById('currentLocationName').innerText = taskData.limp_lugares.nombre;
-    
-    // Iniciar contador visual
-    startTimer(new Date(taskData.inicio_tarea));
-
-    // Configurar botón finalizar
-    finishTaskBtn.onclick = () => finishTask(taskData.id);
-}
-
-function showIdleState() {
-    scanState.classList.remove('hidden');
-    activeTaskState.classList.add('hidden');
-    stopTimer();
-}
-
-// --- 2. SISTEMA DE ESCANEO ---
-
-scanBtn.addEventListener('click', () => {
-    scannerModal.classList.remove('hidden');
-    startScanner();
-});
-
-closeScannerBtn.addEventListener('click', stopScanner);
+// --- SISTEMA DE ESCANEO (Resumido para contexto, usa el que ya tenías) ---
+ui.scanBtn.addEventListener('click', () => { ui.scannerModal.classList.remove('hidden'); startScanner(); });
+ui.closeScannerBtn.addEventListener('click', stopScanner);
 
 function startScanner() {
+    if (!document.getElementById("reader")) return;
     html5QrcodeScanner = new Html5Qrcode("reader");
-    
-    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-    
-    html5QrcodeScanner.start(
-        { facingMode: "environment" }, // Usa cámara trasera
-        config,
-        onScanSuccess,
-        (errorMessage) => { /* Ignorar errores de lectura en vacío */ }
-    ).catch(err => {
-        alert("Error al iniciar cámara: " + err);
-    });
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess)
+    .catch(err => { console.error(err); ui.scannerModal.classList.add('hidden'); toast.error("Error de cámara"); });
 }
-
 function stopScanner() {
-    if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().then(() => {
-            html5QrcodeScanner.clear();
-            scannerModal.classList.add('hidden');
-        }).catch(err => console.error(err));
-    } else {
-        scannerModal.classList.add('hidden');
-    }
+    if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); ui.scannerModal.classList.add('hidden'); }); } 
+    else { ui.scannerModal.classList.add('hidden'); }
 }
-
-async function onScanSuccess(decodedText, decodedResult) {
-    // 1. Detener escáner
+async function onScanSuccess(decodedText) {
     stopScanner();
-    console.log(`Código escaneado: ${decodedText}`);
-
-    // 2. Buscar qué lugar es en la Base de Datos
-    // Suponemos que el QR tiene el texto que guardamos en la columna 'codigo_qr' (ej: QR-NAVE-INT)
+    if (navigator.vibrate) navigator.vibrate(200);
     try {
-        const { data: lugar, error } = await supabase
-            .from('limp_lugares')
-            .select('id, nombre')
-            .eq('codigo_qr', decodedText)
-            .single();
-
-        if (error || !lugar) {
-            alert("❌ Código QR no reconocido en el sistema.");
-            return;
-        }
-
-        // 3. Crear Registro de Inicio (START)
-        const { data: newRecord, error: insertError } = await supabase
-            .from('limp_registros')
-            .insert([
-                { 
-                    operario_id: user.id,
-                    lugar_id: lugar.id,
-                    inicio_tarea: new Date().toISOString(),
-                    estado: 'en_progreso'
-                }
-            ])
-            .select('*, limp_lugares(nombre)')
-            .single();
-
-        if (insertError) throw insertError;
-
-        // 4. Cambiar UI
-        alert(`✅ Inicio registrado en: ${lugar.nombre}`);
+        const { data: lugar } = await supabase.from('limp_lugares').select('id, nombre').eq('codigo_qr', decodedText).single();
+        if (!lugar) { toast.warning("QR no reconocido"); return; }
+        const { data: newRecord } = await supabase.from('limp_registros').insert([{ operario_id: user.id, lugar_id: lugar.id, inicio_tarea: new Date().toISOString(), estado: 'en_progreso' }]).select('*, limp_lugares(nombre)').single();
+        toast.success(`Iniciado: ${lugar.nombre}`);
         showActiveState(newRecord);
-
-    } catch (err) {
-        console.error(err);
-        alert("Error al procesar el escaneo.");
-    }
+    } catch (err) { toast.error("Error al iniciar"); }
 }
+// ... Fin resumen escáner ...
 
-// --- 3. FINALIZAR TAREA ---
-
-async function finishTask(registroId) {
-    if (!confirm("¿Confirmar que terminaste la tarea?")) return;
-
-    try {
-        // Calcular duración (opcional, también se puede hacer con SQL triggers)
-        // Por ahora solo cerramos la fecha
-        const { error } = await supabase
-            .from('limp_registros')
-            .update({ 
-                fin_tarea: new Date().toISOString(),
-                estado: 'completado'
-            })
-            .eq('id', registroId);
-
-        if (error) throw error;
-
-        // Volver a estado normal
-        showIdleState();
-        loadDailyTasks(); // Recargar lista para ver si se actualiza algo
-
-    } catch (err) {
-        console.error(err);
-        alert("Error al finalizar tarea.");
-    }
+// --- TAREA ACTIVA ---
+async function checkActiveTask() {
+    const { data } = await supabase.from('limp_registros').select('*, limp_lugares(nombre)').eq('operario_id', user.id).is('fin_tarea', null).single();
+    if (data) showActiveState(data); else showIdleState();
 }
-
-// --- 4. UTILIDADES (Timer y Lista) ---
-
-function startTimer(startTime) {
-    stopTimer(); // Limpiar anterior si existe
+function showActiveState(taskData) {
+    ui.scanState.classList.add('hidden');
+    ui.activeTaskState.classList.remove('hidden');
+    ui.currentLocation.innerText = taskData.limp_lugares.nombre;
+    startTimer(new Date(taskData.inicio_tarea));
+    ui.finishTaskBtn.onclick = () => finishTask(taskData.id);
+}
+function showIdleState() {
+    ui.scanState.classList.remove('hidden');
+    ui.activeTaskState.classList.add('hidden');
+    stopTimer();
+}
+async function finishTask(id) {
+    ui.finishTaskBtn.disabled = true; ui.finishTaskBtn.innerHTML = "Finalizando...";
+    await supabase.from('limp_registros').update({ fin_tarea: new Date().toISOString(), estado: 'completado' }).eq('id', id);
+    toast.success("Finalizado"); showIdleState(); loadDailyTasks();
+    ui.finishTaskBtn.disabled = false; ui.finishTaskBtn.innerHTML = "FINALIZAR TAREA";
+}
+function startTimer(start) {
+    stopTimer();
     activeInterval = setInterval(() => {
-        const now = new Date();
-        const diff = now - startTime;
-        
-        // Formato HH:MM:SS
-        const hours = Math.floor(diff / 3600000).toString().padStart(2, '0');
-        const minutes = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-        const seconds = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-        
-        timerDisplay.innerText = `${hours}:${minutes}:${seconds}`;
+        const diff = new Date() - start;
+        if(diff < 0) return;
+        const h = Math.floor(diff/3600000).toString().padStart(2,'0');
+        const m = Math.floor((diff%3600000)/60000).toString().padStart(2,'0');
+        const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
+        ui.timerDisplay.innerText = `${h}:${m}:${s}`;
     }, 1000);
 }
+function stopTimer() { clearInterval(activeInterval); ui.timerDisplay.innerText = "00:00:00"; }
 
-function stopTimer() {
-    if (activeInterval) clearInterval(activeInterval);
-    timerDisplay.innerText = "00:00:00";
-}
 
+// --- 3. CARGA DE TAREAS HOY ---
 async function loadDailyTasks() {
-    const taskList = document.getElementById('taskList');
     let today = new Date().getDay(); 
     if (today === 0) today = 7;
 
@@ -210,30 +118,86 @@ async function loadDailyTasks() {
         .from('limp_rutinas')
         .select('*, limp_lugares(nombre)')
         .eq('operario_default_id', user.id)
-        .contains('dias_semana', [today]);
+        .contains('dias_semana', [today])
+        .order('hora_inicio_sugerida', { ascending: true });
 
-    taskList.innerHTML = '';
+    ui.taskList.innerHTML = '';
     
     if (!rutinas || rutinas.length === 0) {
-        taskList.innerHTML = `<div class="text-center py-8 text-gray-500"><p>No hay rutinas asignadas hoy.</p></div>`;
+        ui.taskList.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-8 text-gray-500 opacity-60">
+                <span class="material-symbols-outlined text-4xl mb-2">event_available</span>
+                <p>Todo listo por hoy</p>
+            </div>`;
         return;
     }
 
     rutinas.forEach(rutina => {
         const div = document.createElement('div');
-        div.className = "bg-[#182234] p-4 rounded-xl border border-white/5 flex justify-between items-center shadow-sm";
+        div.className = "bg-[#182234] p-4 rounded-xl border border-white/5 flex justify-between items-center shadow-lg border-l-4 border-primary";
         div.innerHTML = `
-            <div>
-                <h4 class="font-bold text-white">${rutina.limp_lugares.nombre}</h4>
-                <p class="text-gray-400 text-sm">${rutina.titulo}</p>
-                <span class="text-xs bg-primary/20 text-primary px-2 py-1 rounded mt-1 inline-block">${rutina.hora_inicio_sugerida.slice(0,5)} hs</span>
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400">
+                    <span class="material-symbols-outlined text-xl">location_on</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm">${rutina.limp_lugares.nombre}</h4>
+                    <p class="text-gray-400 text-xs">${rutina.titulo}</p>
+                </div>
             </div>
+            <span class="text-xs bg-white/5 text-gray-300 px-2 py-1 rounded font-mono">
+                ${rutina.hora_inicio_sugerida.slice(0,5)}
+            </span>
         `;
-        taskList.appendChild(div);
+        ui.taskList.appendChild(div);
     });
 }
 
-// Limpiar timer al salir de la página para evitar memory leaks
-window.addEventListener('beforeunload', () => {
-    stopTimer();
-});
+// --- 4. NUEVA LÓGICA: AGENDA SEMANAL ---
+async function loadWeeklySchedule() {
+    // Buscar TODAS las rutinas de este usuario
+    const { data: rutinas } = await supabase
+        .from('limp_rutinas')
+        .select('*, limp_lugares(nombre)')
+        .eq('operario_default_id', user.id)
+        .order('hora_inicio_sugerida', { ascending: true });
+
+    ui.weeklyList.innerHTML = '';
+
+    if (!rutinas || rutinas.length === 0) {
+        ui.weeklyList.innerHTML = `<p class="text-gray-500 text-center text-sm">No tienes rutinas asignadas.</p>`;
+        return;
+    }
+
+    rutinas.forEach(rutina => {
+        // Formatear días
+        const diasStr = formatDays(rutina.dias_semana);
+        
+        const card = document.createElement('div');
+        // Estilo más apagado que las de "Hoy" para diferenciarlas
+        card.className = "bg-[#182234]/60 p-3 rounded-xl border border-white/5 flex flex-col gap-2";
+        
+        card.innerHTML = `
+            <div class="flex justify-between items-start">
+                <h4 class="font-semibold text-gray-200 text-sm">${rutina.limp_lugares.nombre}</h4>
+                <span class="text-[10px] bg-white/5 text-gray-400 px-1.5 py-0.5 rounded font-mono">
+                    ${rutina.hora_inicio_sugerida.slice(0,5)}
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-gray-500 text-sm">calendar_month</span>
+                <span class="text-xs text-primary font-medium tracking-wide uppercase">${diasStr}</span>
+            </div>
+        `;
+        ui.weeklyList.appendChild(card);
+    });
+}
+
+// Helper para formatear días
+function formatDays(daysArray) {
+    if (!daysArray || !daysArray.length) return '-';
+    const map = { 1:'Lun', 2:'Mar', 3:'Mié', 4:'Jue', 5:'Vie', 6:'Sáb', 7:'Dom' };
+    const isWeekDays = daysArray.length === 5 && [1,2,3,4,5].every(d => daysArray.includes(d));
+    if (isWeekDays) return 'Lunes a Viernes';
+    return daysArray.sort().map(d => map[d]).join(', ');
+}

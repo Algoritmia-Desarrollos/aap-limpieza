@@ -21,31 +21,45 @@
     <main class="px-4 mt-8">
         
         <div class="flex flex-col items-center mb-8">
-            <div class="w-24 h-24 bg-primary rounded-full flex items-center justify-center text-4xl font-bold mb-4 shadow-lg shadow-blue-500/30">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center text-3xl font-bold mb-4 shadow-lg shadow-blue-500/20 border-2 border-[#182234]">
                 <span id="userInitials">...</span>
             </div>
-            <h2 id="userName" class="text-xl font-bold">Cargando...</h2>
-            <p id="userRole" class="text-gray-400 text-sm">Operario</p>
+            <h2 id="userName" class="text-xl font-bold text-center">Cargando...</h2>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="material-symbols-outlined text-sm text-gray-400">badge</span>
+                <p id="userRole" class="text-gray-400 text-sm">Operario</p>
+            </div>
         </div>
 
-        <div class="bg-[#182234] rounded-2xl overflow-hidden border border-white/5 mb-6">
+        <div class="bg-[#182234] rounded-2xl overflow-hidden border border-white/5 mb-8">
             <div class="p-4 border-b border-white/5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-gray-400">badge</span>
-                    <span class="text-sm font-medium">PIN de Acceso</span>
+                    <div class="p-2 bg-white/5 rounded-lg text-gray-400"><span class="material-symbols-outlined text-xl">pin</span></div>
+                    <span class="text-sm font-medium text-gray-300">PIN de Acceso</span>
                 </div>
-                <span id="userPin" class="font-mono font-bold text-gray-300">****</span>
+                <span id="userPin" class="font-mono font-bold text-white tracking-widest text-lg">****</span>
             </div>
             <div class="p-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-gray-400">mail</span>
-                    <span class="text-sm font-medium">Email</span>
+                    <div class="p-2 bg-white/5 rounded-lg text-gray-400"><span class="material-symbols-outlined text-xl">mail</span></div>
+                    <span class="text-sm font-medium text-gray-300">Email</span>
                 </div>
-                <span id="userEmail" class="text-sm text-gray-300">...</span>
+                <span id="userEmail" class="text-sm text-gray-400 truncate max-w-[150px]">...</span>
             </div>
         </div>
 
-        <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+        <div class="mb-8">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">calendar_month</span>
+                Mis Rutinas Fijas
+            </h3>
+            
+            <div id="routinesList" class="flex flex-col gap-3">
+                <div class="bg-[#182234] p-4 rounded-xl h-24 animate-pulse"></div>
+            </div>
+        </div>
+
+        <button id="logoutBtn" class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 font-bold py-4 rounded-xl transition flex items-center justify-center gap-2 active:scale-95">
             <span class="material-symbols-outlined">logout</span>
             Cerrar Sesión
         </button>

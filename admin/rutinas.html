@@ -2,113 +2,144 @@
 <html lang="es">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>Rutinas - CVO Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+    <link href="../assets/css/styles.css" rel="stylesheet"/>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .day-checkbox:checked + div {
+        /* Optimización visual para botones de días */
+        .day-btn {
+            transition: all 0.1s ease-in-out;
+            user-select: none; /* Evita que se seleccione el texto al hacer clic rápido */
+        }
+        .day-btn.selected {
             background-color: #256af4;
             color: white;
             border-color: #256af4;
+            transform: scale(1.05); /* Pequeño pop visual */
+            box-shadow: 0 4px 6px -1px rgba(37, 106, 244, 0.3);
+        }
+        /* Cursor pointer en filas de tabla para indicar interactividad */
+        tr.cursor-context-menu:hover {
+            background-color: #f8fafc;
         }
     </style>
 </head>
-<body class="bg-[#f6f7f8] text-gray-800">
+<body class="bg-[#f6f7f8] text-gray-800 font-[Inter] overflow-x-hidden">
 
-    <div class="flex min-h-screen">
-        
+    <div class="flex min-h-screen relative w-full">
         <div id="sidebar-container"></div>
 
-        <main class="flex-1 md:ml-64 p-4 md:p-8 pt-6 md:pt-8">
-            
-            <header class="flex flex-col gap-4 mb-6">
+        <main class="flex-1 w-full md:ml-64 p-4 md:p-8 pt-16 md:pt-8 transition-all duration-300">
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
-                    <h1 class="text-xl md:text-3xl font-black text-gray-900">Rutinas de Limpieza</h1>
-                    <p class="text-gray-500 mt-1 text-sm">Configura horarios, frecuencias y asignaciones.</p>
+                    <h1 class="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Rutinas</h1>
+                    <p class="text-gray-500 text-sm mt-1">Configuración de tareas y horarios.</p>
                 </div>
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg text-gray-800">Configurar Rutina</h3>
-                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                <button id="openModalBtn" class="w-full sm:w-auto bg-[#256af4] hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">add_task</span>
+                    <span>Nueva Rutina</span>
+                </button>
+            </header>
+
+            <div class="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[700px] md:min-w-full">
+                        <thead class="bg-gray-50/50 text-gray-500 uppercase font-bold text-xs border-b border-gray-100">
+                            <tr>
+                                <th class="px-6 py-4">Tarea / Sector</th>
+                                <th class="px-6 py-4">Asignado</th>
+                                <th class="px-6 py-4">Frecuencia</th>
+                                <th class="px-6 py-4">Horario</th>
+                                <th class="px-6 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rutinasTableBody" class="text-sm text-gray-600 divide-y divide-gray-50">
+                            <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 animate-pulse">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="rutinaModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-200 opacity-0 pointer-events-none">
+        <div class="bg-white w-full sm:w-full max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transform scale-95 transition-transform duration-200">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 flex-shrink-0">
+                <h3 class="font-bold text-lg text-gray-800" id="modalTitle">Configurar Rutina</h3>
+                <button id="closeModalBtn" class="p-1 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
             
-            <form id="rutinaForm" class="p-6 flex flex-col gap-6">
-                
+            <form id="rutinaForm" class="p-6 flex flex-col gap-6 overflow-y-auto">
+                <input type="hidden" id="editId">
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la Tarea</label>
-                        <input type="text" id="tituloInput" required placeholder="Ej: Limpieza Nave Potencia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nombre Tarea</label>
+                        <input type="text" id="tituloInput" required placeholder="Ej: Limpieza General" class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Sector (Lugar)</label>
-                        <select id="lugarInput" required class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none bg-white">
-                            <option value="">Cargando lugares...</option>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Sector</label>
+                        <select id="lugarInput" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition">
+                            <option value="">Cargando...</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Operario Responsable</label>
-                        <select id="operarioInput" required class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none bg-white">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Operario</label>
+                        <select id="operarioInput" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition">
                             <option value="">Cargando...</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Hora Inicio</label>
-                        <input type="time" id="horaInput" required class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Hora Inicio</label>
+                        <input type="time" id="horaInput" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Duración (min)</label>
-                        <input type="number" id="duracionInput" placeholder="60" class="w-full px-4 py-2 border border-gray-300 rounded-lg outline-none">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Hora Fin</label>
+                        <input type="time" id="horaFinInput" required class="w-full px-4 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Días de Frecuencia</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="1" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">L</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="2" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">M</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="3" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">M</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="4" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">J</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="5" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">V</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="6" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">S</div>
-                        </label>
-                        <label class="cursor-pointer">
-                            <input type="checkbox" name="dias" value="7" class="day-checkbox hidden">
-                            <div class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50 transition select-none">D</div>
-                        </label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3">Frecuencia Semanal</label>
+                    <div id="daysContainer" class="flex justify-between gap-1 sm:gap-2">
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="1">L</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="2">M</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="3">M</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="4">J</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="5">V</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="6">S</button>
+                        <button type="button" class="day-btn aspect-square flex-1 rounded-xl border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-500 hover:bg-gray-50" data-day="7">D</button>
                     </div>
                 </div>
 
-                <div class="pt-4 flex justify-end gap-3 border-t border-gray-100">
-                    <button type="button" id="cancelBtn" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium">Cancelar</button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition">Guardar Rutina</button>
+                <div class="pt-4 border-t border-gray-100 flex justify-between items-center flex-shrink-0">
+                    <button type="button" id="deleteBtnModal" class="hidden text-red-500 hover:bg-red-50 px-4 py-2.5 rounded-xl font-medium transition flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                        <span class="hidden sm:inline">Eliminar</span>
+                    </button>
+
+                    <div class="flex gap-3 ml-auto">
+                        <button type="button" id="cancelBtn" class="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition">Cancelar</button>
+                        <button type="submit" class="px-6 py-2.5 bg-[#256af4] hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition active:scale-95">Guardar</button>
+                    </div>
                 </div>
             </form>
         </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu hidden">
+        <div class="context-menu-item" id="ctxEdit"><span class="material-symbols-outlined text-lg">edit</span> Editar</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" id="ctxDelete"><span class="material-symbols-outlined text-lg">delete</span> Eliminar</div>
     </div>
 
     <script type="module" src="js/rutinas.js"></script>
