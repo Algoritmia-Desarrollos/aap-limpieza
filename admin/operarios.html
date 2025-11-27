@@ -9,14 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
     <link href="../assets/css/styles.css" rel="stylesheet"/>
     <style>
-        /* Corrección para que el menú contextual no se corte */
-        .context-menu {
-            position: fixed !important; /* Forzar fixed */
-        }
-        /* Cursor pointer en toda la fila */
-        tr.cursor-context-menu {
-            cursor: context-menu;
-        }
+        .context-menu { position: fixed !important; }
+        tr.cursor-context-menu { cursor: context-menu; }
     </style>
 </head>
 <body class="bg-[#f6f7f8] text-gray-800 font-[Inter] overflow-x-hidden">
@@ -28,7 +22,7 @@
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                     <h1 class="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Personal</h1>
-                    <p class="text-gray-500 text-sm mt-1">Click derecho para opciones rápidas.</p>
+                    <p class="text-gray-500 text-sm mt-1">Gestión de accesos y perfiles.</p>
                 </div>
                 <button id="openModalBtn" class="w-full sm:w-auto bg-[#256af4] hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95 flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined">person_add</span>
@@ -61,7 +55,7 @@
                             </tr>
                         </thead>
                         <tbody id="operariosTableBody" class="text-sm text-gray-600 divide-y divide-gray-50">
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 animate-pulse">Cargando datos...</td></tr>
+                            <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 animate-pulse">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -69,8 +63,8 @@
         </main>
     </div>
 
-    <div id="operarioModal" class="hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white w-full sm:w-full max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200">
+    <div id="operarioModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 modal-closed">
+        <div class="bg-white w-full sm:w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h3 class="font-bold text-lg text-gray-800" id="modalTitle">Nuevo Operario</h3>
                 <button id="closeModalBtn" class="p-1 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition">

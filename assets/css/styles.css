@@ -1,73 +1,50 @@
-/* assets/css/styles.css */
-
-/* --- OPTIMIZACIÓN DE RENDIMIENTO --- */
-* { -webkit-tap-highlight-color: transparent; }
-
-/* Aceleración por GPU para animaciones */
-main, .modal-content, .context-menu {
-    will-change: transform, opacity;
-    transform: translateZ(0); /* Forzar capa GPU */
-}
-
-/* Optimización de renderizado de tablas grandes */
-table {
-    content-visibility: auto; /* El navegador no renderiza lo que no se ve */
-    contain-intrinsic-size: 1000px; /* Estimado para evitar saltos de scroll */
-}
-
-main { animation: fadeIn 0.3s ease-out; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-/* Loader */
-.btn-spinner {
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 50%;
-    border-top: 2px solid #ffffff;
-    width: 14px;
-    height: 14px;
-    animation: spin 0.8s linear infinite;
-    display: inline-block;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* Menú Contextual */
+/* --- MENÚ CONTEXTUAL (Fixed & Sharp) --- */
 .context-menu {
     position: fixed;
-    z-index: 9999;
+    z-index: 9999; /* Siempre encima de todo */
     background-color: white;
     border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem; /* Bordes un poco más cerrados */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 20px 25px -5px rgba(0, 0, 0, 0.1); /* Sombra profunda */
     min-width: 160px;
     padding: 0.25rem 0;
     opacity: 0;
+    transform: scale(0.98);
+    transform-origin: top right; /* La animación sale desde el botón */
     pointer-events: none;
-    transition: opacity 0.1s ease-out; /* Muy rápido */
+    transition: opacity 0.1s ease-out, transform 0.1s ease-out;
 }
-.context-menu.visible { opacity: 1; pointer-events: auto; }
+
+.context-menu.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
 
 .context-menu-item {
-    display: flex; align-items: center; gap: 0.75rem;
-    padding: 0.6rem 1rem; font-size: 0.875rem; color: #475569;
-    cursor: pointer; transition: background-color 0.05s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.05s;
 }
-.context-menu-item:hover { background-color: #f8fafc; color: #256af4; }
-.context-menu-item.danger:hover { background-color: #fef2f2; color: #ef4444; }
-.context-menu-divider { height: 1px; background-color: #f1f5f9; margin: 0.25rem 0; }
 
-/* Botones Días */
-.day-btn { transition: all 0.1s; user-select: none; cursor: pointer; }
-.day-btn.selected {
-    background-color: #256af4; color: white; border-color: #256af4;
-    box-shadow: 0 2px 4px rgba(37, 106, 244, 0.25);
+.context-menu-item:hover {
+    background-color: #f1f5f9;
+    color: #256af4;
+}
+
+.context-menu-item.danger:hover {
+    background-color: #fef2f2;
+    color: #ef4444;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background-color: #f1f5f9;
+    margin: 0.25rem 0;
 }
